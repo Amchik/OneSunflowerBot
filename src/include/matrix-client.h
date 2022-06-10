@@ -9,7 +9,7 @@
 #ifndef __uoQ7JFxV_matrix_client_h
 #define __uoQ7JFxV_matrix_client_h
 
-#include <json-c/json_types.h>
+#include <json-c/json.h>
 #include <wchar.h>
 
 #include "matrix-defines.h"
