@@ -1,4 +1,5 @@
 #include <curl/urlapi.h>
+#include <json-c/json_object.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -192,6 +193,22 @@ __attribute__((nonnull(1))) json_object* matrix_sync(
   return(json);
 }
 
+__attribute__((nonnull(1, 2, 3))) json_object* matrix_state(
+    const MatrixClient *client,
+    const char *room_id,
+    const char *event_type,
+    char* body
+    ) {
+  json_object *json;
+  char path[256];
+
+  snprintf(path, sizeof(path), "/_matrix/client/v3/rooms/%s/state/%s/%d%d", room_id, event_type, rand(), rand());
+
+  json = matrix_request(client, "PUT", path, 0, body);
+
+  return(json);
+}
+
 __attribute__((nonnull(1, 2, 3))) json_object* matrix_send(
     const MatrixClient *client,
     const char *room_id,
@@ -204,6 +221,25 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_send(
   snprintf(path, sizeof(path), "/_matrix/client/v3/rooms/%s/send/%s/%d%d", room_id, event_type, rand(), rand());
 
   json = matrix_request(client, "PUT", path, 0, body);
+
+  return(json);
+}
+__attribute__((nonnull(1, 2, 3))) json_object* matrix_redact(
+    const MatrixClient *client,
+    const char *room_id,
+    const char *event_id,
+    char* reason
+    ) {
+  json_object *json, *body;
+  char path[256];
+
+  snprintf(path, sizeof(path), "/_matrix/client/v3/rooms/%s/redact/%s/%d%d", room_id, event_id, rand(), rand());
+
+  body = json_object_new_object();
+  json_object_object_add(body, "reason", json_object_new_string(reason));
+  json = matrix_request(client, "PUT", path, 0, (char*)json_object_to_json_string(body));
+
+  json_object_put(body);
 
   return(json);
 }

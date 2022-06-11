@@ -71,6 +71,9 @@ json = matrix_send(&client, "!myroomid:example.com", "m.cool.event",
     "{ \"temp\": { \"number\": 160, \"formatted\": \"160 K\" } }");
 ...
 
+Also you can redact event using matrix_redact().
+To set room state use matrix_state().
+
 2.1.4. Working with MatrixNode
 ------------------------------
 Three functions (one macro):
@@ -93,14 +96,14 @@ You can combine it. If node haven't any flags it will be
 
 2.1.5. Known problems
 ---------------------
-In matrix_send() function txnId sets by 2 rand() output.
+In matrix_{state, send, redact}() function txnId sets by 2 rand() output.
 To send messages correctly application needs srand(time(0)).
 Also, it may be can be not unique and events can be not delivered.
 
 3. To-Do
 ========
-- [?] Write matrix-client.h
- - [x] Impl matrix_{request,sync,send}
+- [x] Write matrix-client.h
+ - [x] Impl matrix_{request,sync,state,send,redact}
 - [ ] Write matrix-bot.h -- h-lvl wrapper for matrix-client
  - [ ] struct MatrixBot that contains MatrixClient and unhandled events
  - [ ] struct MatrixBotHandlers that contains handlers for events:

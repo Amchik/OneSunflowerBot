@@ -62,6 +62,15 @@ __attribute__((nonnull(1))) json_object* matrix_sync(
     MatrixNode *query
     );
 /*
+ * Send room state to API
+ */
+__attribute__((nonnull(1, 2, 3))) json_object* matrix_state(
+    const MatrixClient *client,
+    const char *room_id,
+    const char *event_type,
+    char* body
+    );
+/*
  * Send event to API
  */
 __attribute__((nonnull(1, 2, 3))) json_object* matrix_send(
@@ -69,6 +78,15 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_send(
     const char *room_id,
     const char *event_type,
     char* body
+    );
+/*
+ * Redact event in API
+ */
+__attribute__((nonnull(1, 2, 3))) json_object* matrix_redact(
+    const MatrixClient *client,
+    const char *room_id,
+    const char *event_id,
+    char* reason
     );
 
 #endif
