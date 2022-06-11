@@ -24,7 +24,7 @@ char* matrixnode_stringify(MatrixNode chain) {
   json = json_object_new_object();
   current = &chain;
   while (current != 0) {
-    char s[(wcslen(current->value) - 1) * sizeof(wchar_t) + 1];
+    char s[wcslen(current->value) * sizeof(wchar_t) + 1];
     s[0] = 0;
     sprintf(s, "%ls", current->value);
 
