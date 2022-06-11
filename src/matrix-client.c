@@ -157,9 +157,6 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
   curl_easy_perform(curl);
 
   str.str[str.used + 1] = 0;
-  if (str.size > 20000) {
-    printf("[POSSIBLE IOT TRAP] str.size = %lu (safe value - 0~20000)\n", str.size);
-  }
   json = json_tokener_parse(str.str);
 
   free(str.str);
