@@ -45,7 +45,7 @@ void matrixnode_free(MatrixNode chain);
 /*
  * Send request to API
  */
-__attribute__((nonnull(1, 2, 3))) json_object matrix_request(
+__attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
     const MatrixClient *client,
     const char *method,
     const char *path,
@@ -57,14 +57,14 @@ __attribute__((nonnull(1, 2, 3))) json_object matrix_request(
  * Sync events via sending request to API
  * and modify MatrixClient
  */
-__attribute__((nonnull(1))) json_object matrix_sync(
+__attribute__((nonnull(1))) json_object* matrix_sync(
     MatrixClient *client,
     MatrixNode *query
     );
 /*
  * Send event to API
  */
-__attribute__((nonnull(1, 2, 3))) json_object matrix_send(
+__attribute__((nonnull(1, 2, 3))) json_object* matrix_send(
     const MatrixClient *client,
     const char *room_id,
     const char *event_type,
