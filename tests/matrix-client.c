@@ -11,14 +11,14 @@ static char _BUFFER[256];
 char* test_matrix_newnode() {
   MatrixNode origin;
   char *key;
-  wchar_t *value;
+  char *value;
 
   key = "foo";
-  value = L"bar";
+  value = "bar";
 
-  origin = matrix_newnode("origin_key", L"origin_value", 0,
+  origin = matrix_newnode("origin_key", "origin_value", 0,
       &matrix_newnode(key, value, 0,
-        &matrix_newnode("FALSE", L"FALSE", 0, 0)));
+        &matrix_newnode("FALSE", "FALSE", 0, 0)));
 
   utests_assert(origin.next->key == key);
   utests_assert(origin.next->value == value);
@@ -33,9 +33,9 @@ char* test_matrixnode_stringify() {
   size_t result;
 
   expected = "{ \"field1_big_0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6\": \"Hello, world!, 0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6\", \"field2\": \"42\", \"field3\": \"\" }";
-  chain = matrix_newnode("field1_big_0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6", L"Hello, world!, 0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6", 0,
-      &matrix_newnode("field2", L"42", 0,
-        &matrix_newnode("field3", L"", 0, 0)));
+  chain = matrix_newnode("field1_big_0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6", "Hello, world!, 0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6", 0,
+      &matrix_newnode("field2", "42", 0,
+        &matrix_newnode("field3", "", 0, 0)));
 
   actual = matrixnode_stringify(chain);
   
