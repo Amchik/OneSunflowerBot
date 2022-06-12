@@ -22,7 +22,7 @@ typedef struct MatrixClient {
 
 typedef struct MatrixNode {
   char *key;
-  wchar_t *value;
+  char *value;
   unsigned char flags;
   struct MatrixNode *next;
 } MatrixNode;

@@ -21,11 +21,7 @@ char* matrixnode_stringify(MatrixNode chain) {
   json = json_object_new_object();
   current = &chain;
   while (current != 0) {
-    char s[wcslen(current->value) * sizeof(wchar_t) + 1];
-    s[0] = 0;
-    sprintf(s, "%ls", current->value);
-
-    json_object_object_add(json, current->key, json_object_new_string(s));
+    json_object_object_add(json, current->key, json_object_new_string(current->value));
     current = current->next;
   }
 
@@ -126,10 +122,10 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
   curl_url_set(url, CURLUPART_PATH, path, 0);
   
   for (qcurrent = query; qcurrent != 0; qcurrent = qcurrent->next) {
-    char buff[512];
+    char buff[strlen(qcurrent->key) + strlen(qcurrent->value) + 2];
 
     buff[0] = 0;
-    snprintf(buff, sizeof(buff), "%s=%ls", qcurrent->key, qcurrent->value);
+    snprintf(buff, sizeof(buff), "%s=%s", qcurrent->key, qcurrent->value);
 
     curl_url_set(url, CURLUPART_QUERY, buff, CURLU_URLENCODE | CURLU_APPENDQUERY);
   }
@@ -169,13 +165,11 @@ __attribute__((nonnull(1))) json_object* matrix_sync(
     MatrixNode *query
     ) {
   json_object *json;
-  wchar_t buff[64];
   const char *next_batch;
   MatrixNode *fullquery;
 
   if (client->batch[0] != '\0') {
-    swprintf(buff, sizeof(buff), L"%s", client->batch);
-    fullquery = &matrix_newnode("since", buff, 0, query);
+    fullquery = &matrix_newnode("since", client->batch, 0, query);
   } else {
     fullquery = query;
   }
