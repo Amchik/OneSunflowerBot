@@ -1,11 +1,7 @@
-#include <curl/urlapi.h>
-#include <json-c/json_object.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <json-c/json.h>
 #include <curl/curl.h>
-#include <curl/easy.h>
 
 #include "include/matrix-client.h"
 
