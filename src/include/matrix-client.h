@@ -27,8 +27,19 @@ typedef struct MatrixNode {
   struct MatrixNode *next;
 } MatrixNode;
 
+typedef struct {
+  json_object *raw_json;
+
+  const char *errcode;
+  const char *error;
+
+  const char *event_id;
+} MatrixSendResult;
+
 #define matrix_newnode(_key, _value, _flags, _next) \
   ((MatrixNode){ .key = _key, .value = _value, .flags = _flags, .next = _next })
+#define matrixsendres_free(res) \
+  json_object_put(res.raw_json)
 
 /*
  * Stringify matrix nodes into json object.
@@ -64,7 +75,7 @@ __attribute__((nonnull(1))) json_object* matrix_sync(
 /*
  * Send room state to API
  */
-__attribute__((nonnull(1, 2, 3))) json_object* matrix_state(
+__attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_state(
     const MatrixClient *client,
     const char *room_id,
     const char *event_type,
@@ -73,7 +84,7 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_state(
 /*
  * Send event to API
  */
-__attribute__((nonnull(1, 2, 3))) json_object* matrix_send(
+__attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_send(
     const MatrixClient *client,
     const char *room_id,
     const char *event_type,
@@ -82,7 +93,7 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_send(
 /*
  * Redact event in API
  */
-__attribute__((nonnull(1, 2, 3))) json_object* matrix_redact(
+__attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_redact(
     const MatrixClient *client,
     const char *room_id,
     const char *event_id,

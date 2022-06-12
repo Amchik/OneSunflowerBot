@@ -59,11 +59,13 @@ srand(time(0)); /* only one time, see 2.1.5 */
 char *s;
 s = matrixnode_stringify(matrix_newnode("msgtype", L"m.notice", 0 /* flags, just ignore */),
     &matrix_newnode("body", L"Hello, world!", 0, 0 /* NULL */));
-json_object *json;
-json = matrix_send(&client, "!myroomid:example.com", "m.room.message", s);
+MatrixSendResult res;
+res = matrix_send(&client, "!myroomid:example.com", "m.room.message", s);
 free(s);
-/* work with json object... */
-json_object_put(json); /* free it */
+if (res.event_id) puts(res.event_id);
+else printf("%s: %s\n", res.errcode, res.error); /* error */
+matrixsendres_free(res); /* free it */
+/* or: json_object_put(res.raw_json); */
 
 Hard-way is using json-c library or hardcode event body:
 ...

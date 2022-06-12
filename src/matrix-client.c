@@ -189,44 +189,64 @@ __attribute__((nonnull(1))) json_object* matrix_sync(
   return(json);
 }
 
-__attribute__((nonnull(1, 2, 3))) json_object* matrix_state(
+#define MATRIX_SEND_RESULT_SET_PROP(res, json, prop)\
+  json = json_object_object_get(res.raw_json, #prop);\
+  if (json)\
+    res.prop = json_object_get_string(json);\
+  else\
+    res.prop = 0
+
+__attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_state(
     const MatrixClient *client,
     const char *room_id,
     const char *event_type,
     char* body
     ) {
   json_object *json;
+  MatrixSendResult res;
   char path[256];
 
   snprintf(path, sizeof(path), "/_matrix/client/v3/rooms/%s/state/%s/%d%d", room_id, event_type, rand(), rand());
 
   json = matrix_request(client, "PUT", path, 0, body);
 
-  return(json);
+  res.raw_json = json;
+  MATRIX_SEND_RESULT_SET_PROP(res, json, errcode);
+  MATRIX_SEND_RESULT_SET_PROP(res, json, error);
+  MATRIX_SEND_RESULT_SET_PROP(res, json, event_id);
+
+  return(res);
 }
 
-__attribute__((nonnull(1, 2, 3))) json_object* matrix_send(
+__attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_send(
     const MatrixClient *client,
     const char *room_id,
     const char *event_type,
     char* body
     ) {
   json_object *json;
+  MatrixSendResult res;
   char path[256];
 
   snprintf(path, sizeof(path), "/_matrix/client/v3/rooms/%s/send/%s/%d%d", room_id, event_type, rand(), rand());
 
   json = matrix_request(client, "PUT", path, 0, body);
 
-  return(json);
+  res.raw_json = json;
+  MATRIX_SEND_RESULT_SET_PROP(res, json, errcode);
+  MATRIX_SEND_RESULT_SET_PROP(res, json, error);
+  MATRIX_SEND_RESULT_SET_PROP(res, json, event_id);
+
+  return(res);
 }
-__attribute__((nonnull(1, 2, 3))) json_object* matrix_redact(
+__attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_redact(
     const MatrixClient *client,
     const char *room_id,
     const char *event_id,
     char* reason
     ) {
   json_object *json, *body;
+  MatrixSendResult res;
   char path[256];
 
   snprintf(path, sizeof(path), "/_matrix/client/v3/rooms/%s/redact/%s/%d%d", room_id, event_id, rand(), rand());
@@ -237,5 +257,10 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_redact(
 
   json_object_put(body);
 
-  return(json);
+  res.raw_json = json;
+  MATRIX_SEND_RESULT_SET_PROP(res, json, errcode);
+  MATRIX_SEND_RESULT_SET_PROP(res, json, error);
+  MATRIX_SEND_RESULT_SET_PROP(res, json, event_id);
+
+  return(res);
 }
