@@ -11,3 +11,5 @@
 #define MATRIXNODE_FREEVALUE  4
 #define MATRIXNODE_AUTOFREE   8 /* doesn't works */
 
+#define MATRIXBOT_VSEND_MSGSIZE 3072
+
