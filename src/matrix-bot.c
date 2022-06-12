@@ -1,7 +1,8 @@
-#include <json-c/json.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <sys/types.h>
+#include <json-c/json.h>
 
 #include "include/matrix-defines.h"
 #include "include/matrix-client.h"
@@ -29,7 +30,7 @@ MatrixEvent matrixbot_event_from(json_object *json, const char *room_id) {
   }
   json = json_object_object_get(res.raw_json, "origin_server_ts");
   if (json)
-    res.origin_server_ts = json_object_get_int64(json);
+    res.origin_server_ts = (u_int64_t)json_object_get_int64(json);
   else
     res.origin_server_ts = 0; /* 1970... */
 
