@@ -26,6 +26,9 @@ For now: noway. See to-do.
 By the way, if you need Hello-world fabric, you
 can use this bot. It's just puts("Hello, world!")
 
+Note: you can use example from 2.2.1 and write you'r
+own useless bot! protip: use nodejs
+
 2.1. matrix-client.h
 --------------------
 matrix-client.h is a middle-level (because it not with strings)
@@ -102,16 +105,63 @@ In matrix_{state, send, redact}() function txnId sets by 2 rand() output.
 To send messages correctly application needs srand(time(0)).
 Also, it may be can be not unique and events can be not delivered.
 
+2.2. matrix-bot.h
+-----------------
+matrix-bot.h is a high-level wrapper for ~segfaults~ matrix-client.h
+
+2.2.1. Usage
+------------
+#include <string.h> /* strcmp() */
+#include <unistd.h> /* usleep() */
+
+#include "include/matrix-bot.h"
+
+/* 2.1.5: */
+#include <stdio.h>
+#include <time.h>
+
+/* for first sync: */
+#include <json-c/json_object.h>
+#include "include/matrix-client.h"
+
+main() {
+  MatrixBot bot;
+  /* see 2.1.5 */
+  srand(time(0));
+  /* init bot */
+  bot = matrixbot_new("my.homeserver.example.com", "super-secret-token");
+  /* add handler */
+  bot.handlers.message_new = on_message;
+  /* first sync, ignore first events... */
+  json_object_put(matrix_sync(&bot.client, 0));
+  /* start bot */
+  while (1) {
+    matrixbot_loop(&bot); /* perform one sync */
+    usleep(100000); /* sleep for 100ms (or DoS you'r homeserver...) */
+  }
+}
+void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
+  if (!msg->body) return; /* some cool persons send m.room.message event wo/ body... */
+  if (!strcmp("!ping", msg->body)) {
+    /* for sending messages you can use
+     *  matrixbot_send[f]() and matrixbot_reply[f]().
+     * [f] -- format like printf:
+     */
+    matrixbot_replyf(ctx, "Hello, %s!", ctx.event->sender);
+  }
+}
+
 3. To-Do
 ========
 - [x] Write matrix-client.h
  - [x] Impl matrix_{request,sync,state,send,redact}
-- [ ] Write matrix-bot.h -- h-lvl wrapper for matrix-client
- - [ ] struct MatrixBot that contains MatrixClient and unhandled events
- - [ ] struct MatrixBotHandlers that contains handlers for events:
+- [x] Write matrix-bot.h -- h-lvl wrapper for matrix-client
+ - [x] struct MatrixBot that contains MatrixClient and unhandled events
+ - [x] struct MatrixBotHandlers that contains handlers for events:
        void (*handle_room_message)(...), etc...
- - [ ] functions like matrix_reply, etc...
+ - [x] functions like matrix_reply, etc...
 ...
+- [ ] Lua?..
 - [ ] Rewrite this bot to rust (assigned to @nanoqsh)
       Call it like One Super-Secure-Without-Null-And-Other
         -UB-things--And-One-Thread-Super-Thread-Safe Bot ☕
