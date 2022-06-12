@@ -13,7 +13,7 @@ struct MatrixCurlString {
 __attribute__((malloc))
 char* matrixnode_stringify(MatrixNode chain) {
   json_object *json;
-  MatrixNode *current;
+  const MatrixNode *current;
   const char *answer;
   char *realanswer;
   size_t answer_len;
@@ -38,20 +38,20 @@ char* matrixnode_stringify(MatrixNode chain) {
 
 void matrixnode_free(MatrixNode chain) {
 #define is(f) ((current->flags & f) == f)
-  MatrixNode *current, *next;
+  const MatrixNode *current, *next;
 
   current = &chain;
   while (current != 0) {
     if is(MATRIXNODE_FREEKEY) {
-      free(current->key);
+      free((void*)current->key);
     }
     if is(MATRIXNODE_FREEVALUE) {
-      free(current->value);
+      free((void*)current->value);
     }
 
     if is(MATRIXNODE_FREENODE) {
       next = current->next;
-      free(current);
+      free((void*)current);
       current = next;
     } else {
       current = current->next;
@@ -95,14 +95,15 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
     const MatrixClient *client,
     const char *method,
     const char *path,
-    MatrixNode *query,
-    char* body
+    const MatrixNode *query,
+    const char* body
     ) {
   CURL *curl;
   CURLU *url;
   struct curl_slist *headers;
-  char *realpath, authorization[sizeof(client->access_token) + 22], *mutbody;
-  MatrixNode *qcurrent;
+  char *realpath, authorization[sizeof(client->access_token) + 22];
+  const char *mutbody;
+  const MatrixNode *qcurrent;
   struct MatrixCurlString str;
   json_object *json;
 
@@ -162,11 +163,11 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
 
 __attribute__((nonnull(1))) json_object* matrix_sync(
     MatrixClient *client,
-    MatrixNode *query
+    const MatrixNode *query
     ) {
   json_object *json;
   const char *next_batch;
-  MatrixNode *fullquery;
+  const MatrixNode *fullquery;
 
   if (client->batch[0] != '\0') {
     fullquery = &matrix_newnode("since", client->batch, 0, query);
@@ -194,7 +195,7 @@ __attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_state(
     const MatrixClient *client,
     const char *room_id,
     const char *event_type,
-    char* body
+    const char* body
     ) {
   json_object *json;
   MatrixSendResult res;
@@ -216,7 +217,7 @@ __attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_send(
     const MatrixClient *client,
     const char *room_id,
     const char *event_type,
-    char* body
+    const char* body
     ) {
   json_object *json;
   MatrixSendResult res;
@@ -237,7 +238,7 @@ __attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_redact(
     const MatrixClient *client,
     const char *room_id,
     const char *event_id,
-    char* reason
+    const char* reason
     ) {
   json_object *json, *body;
   MatrixSendResult res;

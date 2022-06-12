@@ -21,10 +21,10 @@ typedef struct MatrixClient {
 } MatrixClient;
 
 typedef struct MatrixNode {
-  char *key;
-  char *value;
+  const char *key;
+  const char *value;
   unsigned char flags;
-  struct MatrixNode *next;
+  const struct MatrixNode *next;
 } MatrixNode;
 
 typedef struct {
@@ -60,8 +60,8 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
     const MatrixClient *client,
     const char *method,
     const char *path,
-    MatrixNode *query,
-    char* body
+    const MatrixNode *query,
+    const char* body
     );
 
 /*
@@ -70,7 +70,7 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
  */
 __attribute__((nonnull(1))) json_object* matrix_sync(
     MatrixClient *client,
-    MatrixNode *query
+    const MatrixNode *query
     );
 /*
  * Send room state to API
@@ -79,7 +79,7 @@ __attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_state(
     const MatrixClient *client,
     const char *room_id,
     const char *event_type,
-    char* body
+    const char* body
     );
 /*
  * Send event to API
@@ -88,7 +88,7 @@ __attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_send(
     const MatrixClient *client,
     const char *room_id,
     const char *event_type,
-    char* body
+    const char* body
     );
 /*
  * Redact event in API
@@ -97,7 +97,7 @@ __attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_redact(
     const MatrixClient *client,
     const char *room_id,
     const char *event_id,
-    char* reason
+    const char* reason
     );
 
 #endif
