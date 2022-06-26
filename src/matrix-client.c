@@ -179,6 +179,8 @@ __attribute__((nonnull(1))) json_object* matrix_sync(
   if (json == 0) return(json);
 
   next_batch = json_object_get_string(json_object_object_get(json, "next_batch"));
+  if (!next_batch)
+    return(json);
   strncpy(client->batch, next_batch, 64);
 
   return(json);

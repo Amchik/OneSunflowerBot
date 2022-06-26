@@ -92,15 +92,20 @@ json_object* matrixbot_json_getpath(json_object* json, ...) {
   return(json);
 }
 
-void matrixbot_loop(MatrixBot *bot) {
+MatrixBotLoopResult matrixbot_loop(MatrixBot *bot) {
   json_object *root, *rooms, *event;
   size_t events_len, idx;
+  MatrixBotLoopResult result;
 
+  result.errcode[0] = 0;
+  result.error[0] = 0;
   root = matrix_sync(&bot->client, 0);
   rooms = JSON(root, "rooms", "join", 0);
   if (!rooms || !json_object_is_type(rooms, json_type_object)) {
+    strncpy(result.errcode, json_object_get_string(json_object_object_get(root, "errcode")), sizeof(result.errcode));
+    strncpy(result.error, json_object_get_string(json_object_object_get(root, "error")), sizeof(result.error));
     json_object_put(root);
-    return; /* to-do: error handling */
+    return result;
   }
 
   /* not ansi c, but this bot uses c99... */
@@ -146,6 +151,8 @@ void matrixbot_loop(MatrixBot *bot) {
     }
   }
   json_object_put(root);
+
+  return result;
 }
 
 MatrixSendResult matrixbot_send(MatrixBotContext ctx, const char *message) {

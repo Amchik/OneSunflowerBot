@@ -60,18 +60,33 @@ struct MatrixBot {
   MatrixBotHandlers handlers;
 };
 
+typedef struct {
+  char errcode[32];
+  char error[256];
+} MatrixBotLoopResult;
+
 MatrixEvent matrixbot_event_from(json_object *json, const char *room_id);
 MatrixEventMessage matrixbot_message_from(json_object *json);
 MatrixEventMessageEdit matrixbot_messageedit_from(json_object *json);
 
-MatrixBot matrixbot_new(const char *homeserver, const char *access_token);
-void      matrixbot_loop(MatrixBot *bot);
+MatrixBot           matrixbot_new(const char *homeserver, const char *access_token);
+__attribute__((warn_unused_result))
+MatrixBotLoopResult matrixbot_loop(MatrixBot *bot);
 
+#define matrixbot_qsync(bot) json_object_put(matrix_sync(&bot.client, 0))
+
+__attribute__((warn_unused_result))
 MatrixSendResult matrixbot_send(MatrixBotContext ctx, const char *message);
+__attribute__((warn_unused_result))
 MatrixSendResult matrixbot_reply(MatrixBotContext ctx, const char *message);
-__attribute__((format(printf, 2, 3)))
+__attribute__((warn_unused_result, format(printf, 2, 3)))
 MatrixSendResult matrixbot_sendf(MatrixBotContext ctx, const char *fmt, ...);
-__attribute__((format(printf, 2, 3)))
+__attribute__((warn_unused_result, format(printf, 2, 3)))
 MatrixSendResult matrixbot_replyf(MatrixBotContext ctx, const char *fmt, ...);
+
+#define matrixbot_qsend(ctx, message) matrixsendres_free(matrixbot_send(ctx, message))
+#define matrixbot_qreply(ctx, message) matrixsendres_free(matrixbot_reply(ctx, message))
+#define matrixbot_qsendf(ctx, message, ...) matrixsendres_free(matrixbot_sendf(ctx, message, __VA_ARGS__))
+#define matrixbot_qreplyf(ctx, message, ...) matrixsendres_free(matrixbot_replyf(ctx, message, __VA_ARGS__))
 
 #endif
