@@ -32,7 +32,7 @@ char* test_matrixnode_stringify() {
   char *expected, *actual;
   size_t result;
 
-  expected = "{ \"field1_big_0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6\": \"Hello, world!, 0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6\", \"field2\": \"42\", \"field3\": \"\" }";
+  expected = "{\n\t\"field1_big_0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6\":\t\"Hello, world!, 0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6\",\n\t\"field2\":\t\"42\",\n\t\"field3\":\t\"\"\n}";
   chain = matrix_newnode("field1_big_0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6", "Hello, world!, 0cf9180a764aba863a67b6d72f0918bc131c6772642cb2dce5a34f0a702f9470ddc2bf125c12198b1995c233c34b4afd346c54a2334c350a948a51b6e8b4e6b6", 0,
       &matrix_newnode("field2", "42", 0,
         &matrix_newnode("field3", "", 0, 0)));
