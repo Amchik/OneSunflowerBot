@@ -28,7 +28,7 @@ MatrixStorage matrixstorage_create(const char *filename) {
   jsonstr[flen] = 0;
   fread(jsonstr, 1, flen, res._fileptr);
   fclose(res._fileptr);
-  root = cJSON_ParseWithLength(jsonstr, flen);
+  root = cJSON_Parse(jsonstr);
   free(jsonstr);
 
   for (obj = root->child; obj != 0; obj = obj->next) {
