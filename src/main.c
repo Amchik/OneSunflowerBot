@@ -17,34 +17,28 @@
 #endif
 
 void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
+  struct MXAutoCMDHandlerNode *node;
+  size_t i, len;
+
   if (!msg->body) return;
+  for (node = MXAUTOCMD_FUNCTIONS; node != 0; node = node->next) {
+    switch (node->type) {
+      case MXAUTOCMD_COMMAND:
+        len = strlen(node->name);
+        for (i = 0; i < len; i++)
+          if (node->name[i] != msg->body[i])
+            break;
+        if (msg->body[len] != 0 && msg->body[len] != ' ')
+          break;
 
-  if (strcmp(msg->body, "!pong") == 0) {
-    unsigned long tm;
-    struct timeval t;
+      case MXAUTOCMD_MESSAGE:
+        node->handler(ctx, msg);
+        break;
 
-    gettimeofday(&t, 0);
-    tm = (t.tv_sec * 1000000 + t.tv_usec) / 1000;
-
-    matrixbot_qreplyf(ctx, "Ping-pong! 🏓 %lums",
-        tm - ctx.event->origin_server_ts);
-    printf("\033[1;34minfo:\033[0m Ping: %lums\n", tm - ctx.event->origin_server_ts);
-  } else if (!strcmp(msg->body, "!cmd")) {
-    size_t i;
-    struct MXAutoCMDHandlerNode *node;
-
-    if (!MXAUTOCMD_FUNCTIONS) {
-      matrixbot_qreply(ctx, "No commands registered.");
-      return;
+      case MXAUTOCMD_EDIT:
+      case MXAUTOCMD_REDACT:
+        break;
     }
-    i = 1;
-    for (node = MXAUTOCMD_FUNCTIONS; node->next != 0; node = node->next) {
-      printf(" CMD [%s] @ %p", node->name, (void*)node->handler);
-      i++;
-    }
-    printf(" CMD [%s] @ %p\n", node->name, (void*)node->handler);
-
-    matrixbot_qreplyf(ctx, "Registered total (size_t)%lu commands! See console output for more details", i);
   }
 }
 
