@@ -13,6 +13,7 @@
 #include <cjson/cJSON.h>
 
 #include "matrix-client.h"
+#include "matrix-storage.h"
 
 typedef struct MatrixBot MatrixBot;
 
@@ -58,6 +59,7 @@ typedef struct {
 struct MatrixBot {
   MatrixClient client;
   MatrixBotHandlers handlers;
+  MatrixStorage storage;
 };
 
 typedef struct {

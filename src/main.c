@@ -11,10 +11,13 @@
 #include "include/matrix-bot.h"
 #include "include/matrix-autocmd.h"
 #include "include/matrix-client.h"
+#include "include/matrix-storage.h"
 
 #ifndef MATRIXBOT_DEFAULTHS
 #define MATRIXBOT_DEFAULTHS "matrix-client.matrix.org"
 #endif
+
+MatrixStorage *_BOTSTORAGE = 0;
 
 void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
   struct MXAutoCMDHandlerNode *node;
@@ -27,8 +30,9 @@ void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
         len = strlen(node->name);
         for (i = 0; i < len; i++)
           if (node->name[i] != msg->body[i])
-            break;
+            goto do_break;
         if (msg->body[len] != 0 && msg->body[len] != ' ')
+          do_break:
           break;
 
       case MXAUTOCMD_MESSAGE:
@@ -76,6 +80,8 @@ void get_token(char *filepath, char token[MATRIX_ACCESSTOKEN_LEN]) {
 
 __attribute__((noreturn))
 void on_signal(int sig) {
+  if (_BOTSTORAGE)
+    matrixstorage_close(*_BOTSTORAGE);
   if (sig == SIGINT || sig == SIGTERM) {
     printf("\r\033[1;34minfo:\033[0;1m stopping bot...\033[0m\n");
   } else {
@@ -125,6 +131,10 @@ int main(int argc, char **argv) {
   if (!has_token) {
     get_token(0, bot.client.access_token);
   }
+
+  /* TODO: matrix-storage */
+  bot.storage = matrixstorage_create("matrix-storage.json");
+  _BOTSTORAGE = &bot.storage;
 
   bot.handlers.message_new = on_message;
 
