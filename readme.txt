@@ -7,13 +7,10 @@ Written in C. In future may be supports Lua...
 ===============
 This application require 2 libs:
 * libcurl   -- make requests to matrix
-* libjson-c -- json...
-
-Note: i use libjson-c 0.16-1 (debian sid, by the way),
-      but some distros have libjson-c version 0.15.x.
+* libcjson  -- json
 
 Install on debian (or ubuntu):
-$ sudo apt install libjson-c-dev libcurl4-openssl-dev
+$ sudo apt install libcjson-dev libcurl4-openssl-dev
 Pro Tip: use suapt (see Amchik/suapt)
 
 2. Usage
@@ -43,16 +40,22 @@ memset(&client, 0, sizeof(client)); /* or set only .batch */
 strncpy(client->homeserver, "example.com", sizeof(client->homeserver));
 strncpy(client->access_token, "super-secret-information", sizeof(client->access_token));
 
+/* Note: if you use matrix.org homeserver use "matrix-client.matrix.org" in client->homeserver
+ */
+
 2.1.2. First sync
 -----------------
 First, we need to get batch. matrix_sync function also sets it on
 request:
 
-json_object *json;
+cJSON *json;
 json = matrix_sync(&client, 0 /* do not pass query params */);
-json_object_put(json); /* if you don't need it */
+cJSON_Delete(json); /* if you don't need it */
 
 To get events call it again. matrix_sync will pass state after first call.
+
+Note: matrix-bot.h have matrixbot_qsync(bot) macro, that can quietly sync and free result.
+      Use it if you have bot object.
 
 2.1.3. Sending events
 ---------------------
@@ -68,7 +71,7 @@ free(s);
 if (res.event_id) puts(res.event_id);
 else printf("%s: %s\n", res.errcode, res.error); /* error */
 matrixsendres_free(res); /* free it */
-/* or: json_object_put(res.raw_json); */
+/* or: cJSON_Delete(res.raw_json); */
 
 Hard-way is using json-c library or hardcode event body:
 ...
@@ -120,10 +123,17 @@ matrix-bot.h is a high-level wrapper for ~segfaults~ matrix-client.h
 #include <stdio.h>
 #include <time.h>
 
-/* for first sync: */
-#include <json-c/json_object.h>
-#include "include/matrix-client.h"
-
+void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
+  if (!msg->body) return; /* some cool persons send m.room.message event wo/ body... */
+  if (!strcmp("!ping", msg->body)) {
+    /* for sending messages you can use
+     *  matrixbot_[q]send[f]() and matrixbot_reply[f]().
+     * prefix [q] free response
+     * [f] -- format like printf:
+     */
+    matrixbot_qreplyf(ctx, "Hello, %s!", ctx.event->sender);
+  }
+}
 main() {
   MatrixBot bot;
   /* see 2.1.5 */
@@ -133,21 +143,11 @@ main() {
   /* add handler */
   bot.handlers.message_new = on_message;
   /* first sync, ignore first events... */
-  json_object_put(matrix_sync(&bot.client, 0));
+  matrixbot_qsync(bot);
   /* start bot */
   while (1) {
     matrixbot_loop(&bot); /* perform one sync */
     usleep(100000); /* sleep for 100ms (or DoS you'r homeserver...) */
-  }
-}
-void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
-  if (!msg->body) return; /* some cool persons send m.room.message event wo/ body... */
-  if (!strcmp("!ping", msg->body)) {
-    /* for sending messages you can use
-     *  matrixbot_send[f]() and matrixbot_reply[f]().
-     * [f] -- format like printf:
-     */
-    matrixbot_replyf(ctx, "Hello, %s!", ctx.event->sender);
   }
 }
 
@@ -168,7 +168,5 @@ void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
 
 4. GitHub actions
 =================
-ubuntu-latest have libjson-c-dev version 0.15.x, but this bot
- requires 0.16.x. Solution: do not include <json-c/json_types.h>.
-Use <json-c/json.h> instead <json-c/json_*.h>, please.
+[nothing...]
 
