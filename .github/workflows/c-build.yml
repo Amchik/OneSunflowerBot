@@ -18,7 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install libs
-      run: sudo apt install libjson-c-dev libcurl4-openssl-dev
+      run: sudo apt update && sudo apt install libcjson-dev libcurl4-openssl-dev
     - name: Build
       run: make all
     - name: Run tests
