@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include <json-c/json.h>
+#include <cjson/cJSON.h>
 #include <curl/curl.h>
 
 #include "include/matrix-client.h"
@@ -12,28 +12,23 @@ struct MatrixCurlString {
 
 __attribute__((malloc))
 char* matrixnode_stringify(MatrixNode chain) {
-  json_object *json;
+  cJSON *json;
   const MatrixNode *current;
-  const char *answer;
-  char *realanswer;
-  size_t answer_len;
+  char *answer;
 
-  json = json_object_new_object();
+  json = cJSON_CreateObject();
   current = &chain;
   while (current != 0) {
-    json_object_object_add(json, current->key, json_object_new_string(current->value));
+    cJSON_AddItemToObject(json, current->key, cJSON_CreateString(current->value));
     current = current->next;
   }
 
-  answer = json_object_to_json_string(json);
-  answer_len = strlen(answer) + 1;
-  realanswer = malloc(answer_len);
-  memcpy(realanswer, answer, answer_len);
+  answer = cJSON_Print(json);
 
-  /* this function also free answer */
-  json_object_put(json);
+  /* this function NOT free answer */
+  cJSON_Delete(json);
 
-  return(realanswer);
+  return(answer);
 }
 
 void matrixnode_free(MatrixNode chain) {
@@ -91,7 +86,7 @@ size_t matrixcurl_writecallback(void *data, size_t size, size_t nmemb, void *use
   return(realsize);
 }
 
-__attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
+__attribute__((nonnull(1, 2, 3))) cJSON* matrix_request(
     const MatrixClient *client,
     const char *method,
     const char *path,
@@ -105,7 +100,7 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
   const char *mutbody;
   const MatrixNode *qcurrent;
   struct MatrixCurlString str;
-  json_object *json;
+  cJSON *json;
 
   snprintf(authorization, sizeof(authorization), "Authorization: Bearer %s",
       client->access_token);
@@ -151,7 +146,7 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
   curl_easy_perform(curl);
 
   str.str[str.used + 1] = 0;
-  json = json_tokener_parse(str.str);
+  json = cJSON_Parse(str.str);
 
   free(str.str);
   curl_easy_cleanup(curl);
@@ -161,11 +156,11 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
   return(json);
 }
 
-__attribute__((nonnull(1))) json_object* matrix_sync(
+__attribute__((nonnull(1))) cJSON* matrix_sync(
     MatrixClient *client,
     const MatrixNode *query
     ) {
-  json_object *json;
+  cJSON *json;
   const char *next_batch;
   const MatrixNode *fullquery;
 
@@ -178,7 +173,7 @@ __attribute__((nonnull(1))) json_object* matrix_sync(
   json = matrix_request(client, "GET", "/_matrix/client/v3/sync", fullquery, 0);
   if (json == 0) return(json);
 
-  next_batch = json_object_get_string(json_object_object_get(json, "next_batch"));
+  next_batch = (cJSON_GetObjectItemCaseSensitive(json, "next_batch"))->valuestring;
   if (!next_batch)
     return(json);
   strncpy(client->batch, next_batch, 64);
@@ -187,9 +182,9 @@ __attribute__((nonnull(1))) json_object* matrix_sync(
 }
 
 #define MATRIX_SEND_RESULT_SET_PROP(res, json, prop)\
-  json = json_object_object_get(res.raw_json, #prop);\
+  json = cJSON_GetObjectItemCaseSensitive(res.raw_json, #prop);\
   if (json)\
-    res.prop = json_object_get_string(json);\
+    res.prop = json->valuestring;\
   else\
     res.prop = 0
 
@@ -199,7 +194,7 @@ __attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_state(
     const char *event_type,
     const char* body
     ) {
-  json_object *json;
+  cJSON *json;
   MatrixSendResult res;
   char path[256];
 
@@ -221,7 +216,7 @@ __attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_send(
     const char *event_type,
     const char* body
     ) {
-  json_object *json;
+  cJSON *json;
   MatrixSendResult res;
   char path[256];
 
@@ -242,17 +237,19 @@ __attribute__((nonnull(1, 2, 3))) MatrixSendResult matrix_redact(
     const char *event_id,
     const char* reason
     ) {
-  json_object *json, *body;
+  cJSON *json, *body;
   MatrixSendResult res;
-  char path[256];
+  char path[256], *jsonstr;
 
   snprintf(path, sizeof(path), "/_matrix/client/v3/rooms/%s/redact/%s/%d%d", room_id, event_id, rand(), rand());
 
-  body = json_object_new_object();
-  json_object_object_add(body, "reason", json_object_new_string(reason));
-  json = matrix_request(client, "PUT", path, 0, (char*)json_object_to_json_string(body));
+  body = cJSON_CreateObject();
+  cJSON_AddStringToObject(body, "reason", reason);
+  jsonstr = cJSON_Print(body);
+  json = matrix_request(client, "PUT", path, 0, jsonstr);
 
-  json_object_put(body);
+  free(jsonstr);
+  cJSON_Delete(body);
 
   res.raw_json = json;
   MATRIX_SEND_RESULT_SET_PROP(res, json, errcode);

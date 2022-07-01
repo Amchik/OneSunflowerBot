@@ -9,8 +9,7 @@
 #ifndef __uoQ7JFxV_matrix_client_h
 #define __uoQ7JFxV_matrix_client_h
 
-#include <json-c/json.h>
-#include <wchar.h>
+#include <cjson/cJSON.h>
 
 #include "matrix-defines.h"
 
@@ -28,7 +27,7 @@ typedef struct MatrixNode {
 } MatrixNode;
 
 typedef struct {
-  json_object *raw_json;
+  cJSON *raw_json;
 
   const char *errcode;
   const char *error;
@@ -39,7 +38,7 @@ typedef struct {
 #define matrix_newnode(_key, _value, _flags, _next) \
   ((MatrixNode){ .key = _key, .value = _value, .flags = _flags, .next = _next })
 #define matrixsendres_free(res) \
-  json_object_put(res.raw_json)
+  cJSON_Delete(res.raw_json)
 
 /*
  * Stringify matrix nodes into json object.
@@ -56,7 +55,7 @@ void matrixnode_free(MatrixNode chain);
 /*
  * Send request to API
  */
-__attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
+__attribute__((nonnull(1, 2, 3))) cJSON* matrix_request(
     const MatrixClient *client,
     const char *method,
     const char *path,
@@ -68,7 +67,7 @@ __attribute__((nonnull(1, 2, 3))) json_object* matrix_request(
  * Sync events via sending request to API
  * and modify MatrixClient
  */
-__attribute__((nonnull(1))) json_object* matrix_sync(
+__attribute__((nonnull(1))) cJSON* matrix_sync(
     MatrixClient *client,
     const MatrixNode *query
     );
