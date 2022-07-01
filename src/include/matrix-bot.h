@@ -10,14 +10,14 @@
 #define __XdAqsf9F_matrix_bot_h
 
 #include <sys/types.h>
-#include <json-c/json.h>
+#include <cjson/cJSON.h>
 
 #include "matrix-client.h"
 
 typedef struct MatrixBot MatrixBot;
 
 typedef struct {
-  json_object *raw_json;
+  cJSON *raw_json;
 
   const char *type;
   const char *sender;
@@ -25,7 +25,7 @@ typedef struct {
   const char *room_id;
   u_int64_t  origin_server_ts;
 
-  json_object *content;
+  cJSON *content;
 } MatrixEvent;
 
 typedef struct {
@@ -65,15 +65,15 @@ typedef struct {
   char error[256];
 } MatrixBotLoopResult;
 
-MatrixEvent matrixbot_event_from(json_object *json, const char *room_id);
-MatrixEventMessage matrixbot_message_from(json_object *json);
-MatrixEventMessageEdit matrixbot_messageedit_from(json_object *json);
+MatrixEvent matrixbot_event_from(cJSON *json, const char *room_id);
+MatrixEventMessage matrixbot_message_from(cJSON *json);
+MatrixEventMessageEdit matrixbot_messageedit_from(cJSON *json);
 
 MatrixBot           matrixbot_new(const char *homeserver, const char *access_token);
 __attribute__((warn_unused_result))
 MatrixBotLoopResult matrixbot_loop(MatrixBot *bot);
 
-#define matrixbot_qsync(bot) json_object_put(matrix_sync(&bot.client, 0))
+#define matrixbot_qsync(bot) cJSON_Delete(matrix_sync(&bot.client, 0))
 
 __attribute__((warn_unused_result))
 MatrixSendResult matrixbot_send(MatrixBotContext ctx, const char *message);

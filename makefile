@@ -63,7 +63,7 @@ TST = $(wildcard $(TSTD)/*.c) $(wildcard $(TSTD)/**/*.c)
 OBJ = $(patsubst $(SRCD)/%.c,$(OBJD)/$(TARGET)/%.o,$(SRC))
 OBT = $(patsubst $(SRCD)/%.c,$(OBJD)/$(TARGET).tests/%.o,$(SRC)) $(patsubst $(TSTD)/%.c,$(OBJD)/$(TARGET).tests/%.test.o,$(TST))
 
-_LDFLAGS = -lcurl -ljson-c
+_LDFLAGS = -lcurl -lcjson
 _CFLAGS_LOG = -Wall -Wextra -pedantic -Wpedantic
 _CFLAGS_DEFINES = -Isrc/ -D _DEFAULT_SOURCE
 _STD=c99

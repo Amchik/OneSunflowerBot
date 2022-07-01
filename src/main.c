@@ -1,4 +1,3 @@
-#include <json-c/json_object.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -10,6 +9,7 @@
 #include <signal.h>
 
 #include "include/matrix-bot.h"
+#include "include/matrix-client.h"
 
 #ifndef MATRIXBOT_DEFAULTHS
 #define MATRIXBOT_DEFAULTHS "matrix-client.matrix.org"
