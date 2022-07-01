@@ -10,6 +10,7 @@
 #include <signal.h>
 
 #include "include/matrix-bot.h"
+#include "include/matrix-autocmd.h"
 
 #ifndef MATRIXBOT_DEFAULTHS
 #define MATRIXBOT_DEFAULTHS "matrix-client.matrix.org"
@@ -28,6 +29,22 @@ void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
     matrixbot_qreplyf(ctx, "Ping-pong! 🏓 %lums",
         tm - ctx.event->origin_server_ts);
     printf("\033[1;34minfo:\033[0m Ping: %lums\n", tm - ctx.event->origin_server_ts);
+  } else if (!strcmp(msg->body, "!cmd")) {
+    size_t i;
+    struct MXAutoCMDHandlerNode *node;
+
+    if (!MXAUTOCMD_FUNCTIONS) {
+      matrixbot_qreply(ctx, "No commands registered.");
+      return;
+    }
+    i = 1;
+    for (node = MXAUTOCMD_FUNCTIONS; node->next != 0; node = node->next) {
+      printf(" CMD [%s] @ %p", node->name, (void*)node->handler);
+      i++;
+    }
+    printf(" CMD [%s] @ %p\n", node->name, (void*)node->handler);
+
+    matrixbot_qreplyf(ctx, "Registered total (size_t)%lu commands! See console output for more details", i);
   }
 }
 
