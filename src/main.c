@@ -9,25 +9,40 @@
 #include <signal.h>
 
 #include "include/matrix-bot.h"
+#include "include/matrix-autocmd.h"
 #include "include/matrix-client.h"
+#include "include/matrix-storage.h"
 
 #ifndef MATRIXBOT_DEFAULTHS
 #define MATRIXBOT_DEFAULTHS "matrix-client.matrix.org"
 #endif
 
+MatrixStorage *_BOTSTORAGE = 0;
+
 void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
+  struct MXAutoCMDHandlerNode *node;
+  size_t i, len;
+
   if (!msg->body) return;
+  for (node = MXAUTOCMD_FUNCTIONS; node != 0; node = node->next) {
+    switch (node->type) {
+      case MXAUTOCMD_COMMAND:
+        len = strlen(node->name);
+        for (i = 0; i < len; i++)
+          if (node->name[i] != msg->body[i])
+            goto do_break;
+        if (msg->body[len] != 0 && msg->body[len] != ' ')
+          do_break:
+          break;
 
-  if (strcmp(msg->body, "!pong") == 0) {
-    unsigned long tm;
-    struct timeval t;
+      case MXAUTOCMD_MESSAGE:
+        node->handler(ctx, msg);
+        break;
 
-    gettimeofday(&t, 0);
-    tm = (t.tv_sec * 1000000 + t.tv_usec) / 1000;
-
-    matrixbot_qreplyf(ctx, "Ping-pong! 🏓 %lums",
-        tm - ctx.event->origin_server_ts);
-    printf("\033[1;34minfo:\033[0m Ping: %lums\n", tm - ctx.event->origin_server_ts);
+      case MXAUTOCMD_EDIT:
+      case MXAUTOCMD_REDACT:
+        break;
+    }
   }
 }
 
@@ -65,6 +80,8 @@ void get_token(char *filepath, char token[MATRIX_ACCESSTOKEN_LEN]) {
 
 __attribute__((noreturn))
 void on_signal(int sig) {
+  if (_BOTSTORAGE)
+    matrixstorage_close(*_BOTSTORAGE);
   if (sig == SIGINT || sig == SIGTERM) {
     printf("\r\033[1;34minfo:\033[0;1m stopping bot...\033[0m\n");
   } else {
@@ -114,6 +131,10 @@ int main(int argc, char **argv) {
   if (!has_token) {
     get_token(0, bot.client.access_token);
   }
+
+  /* TODO: matrix-storage */
+  bot.storage = matrixstorage_create("matrix-storage.json");
+  _BOTSTORAGE = &bot.storage;
 
   bot.handlers.message_new = on_message;
 
