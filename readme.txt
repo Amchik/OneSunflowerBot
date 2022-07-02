@@ -1,172 +1,114 @@
 One Sunflower Bot 🌻
 =================
-A matrix bot that can nothing!
+A simple matrix bot.
 Written in C. In future may be supports Lua...
 
-1. Dependencies
-===============
-This application require 2 libs:
-* libcurl   -- make requests to matrix
-* libcjson  -- json
+1. Build and run
+================
+In three lines:
+$ suapt i libcjson-dev libcurl4-openssl-dev
+$ make
+$ bin/onesunflowerbot [...]
 
-Install on debian (or ubuntu):
+1.1 Dependencies
+----------------
+* libcurl  -- send requests to matrix homeserver
+* libcjson -- json parsing
+
+Install on debian/ubuntu:
 $ sudo apt install libcjson-dev libcurl4-openssl-dev
-Pro Tip: use suapt (see Amchik/suapt)
 
-2. Usage
-========
-$ make check
-shows cool results (no)
-
-For now: noway. See to-do.
-
-By the way, if you need Hello-world fabric, you
-can use this bot. It's just puts("Hello, world!")
-
-Note: you can use example from 2.2.1 and write you'r
-own useless bot! protip: use nodejs
-
-2.1. matrix-client.h
---------------------
-matrix-client.h is a middle-level (because it not with strings)
-API that can sends basic requests to homeserver.
-
-2.1.1. Init client
-------------------
-#include "include/matrix-client.h"
-
-MatrixClient client;
-memset(&client, 0, sizeof(client)); /* or set only .batch */
-strncpy(client->homeserver, "example.com", sizeof(client->homeserver));
-strncpy(client->access_token, "super-secret-information", sizeof(client->access_token));
-
-/* Note: if you use matrix.org homeserver use "matrix-client.matrix.org" in client->homeserver
- */
-
-2.1.2. First sync
------------------
-First, we need to get batch. matrix_sync function also sets it on
-request:
-
-cJSON *json;
-json = matrix_sync(&client, 0 /* do not pass query params */);
-cJSON_Delete(json); /* if you don't need it */
-
-To get events call it again. matrix_sync will pass state after first call.
-
-Note: matrix-bot.h have matrixbot_qsync(bot) macro, that can quietly sync and free result.
-      Use it if you have bot object.
-
-2.1.3. Sending events
----------------------
-Simple m.room.message event looks like that:
-
-srand(time(0)); /* only one time, see 2.1.5 */
-char *s;
-s = matrixnode_stringify(matrix_newnode("msgtype", L"m.notice", 0 /* flags, just ignore */),
-    &matrix_newnode("body", L"Hello, world!", 0, 0 /* NULL */));
-MatrixSendResult res;
-res = matrix_send(&client, "!myroomid:example.com", "m.room.message", s);
-free(s);
-if (res.event_id) puts(res.event_id);
-else printf("%s: %s\n", res.errcode, res.error); /* error */
-matrixsendres_free(res); /* free it */
-/* or: cJSON_Delete(res.raw_json); */
-
-Hard-way is using json-c library or hardcode event body:
-...
-json = matrix_send(&client, "!myroomid:example.com", "m.cool.event",
-    "{ \"temp\": { \"number\": 160, \"formatted\": \"160 K\" } }");
-...
-
-Also you can redact event using matrix_redact().
-To set room state use matrix_state().
-
-2.1.4. Working with MatrixNode
-------------------------------
-Three functions (one macro):
- * MatrixNode matrix_newnode(key, value, flags, next)
-    (macro) creates new MatrixNode
- * char* matrixnode_stringify(node)
-    Returns JSON string of node. (string need to be free)
- * void matrixnode_free(node)
-    Free matrix node by flags
-
-Node flags:
- * MATRIXNODE_FREENODE
-    Node object will be free (without key & value)
- * MATRIXNODE_FREEKEY
-    Node key will be free
- * MATRIXNODE_FREEVALUE
-    Node value will be free
-You can combine it. If node haven't any flags it will be
- skipped in matrixnode_free.
-
-2.1.5. Known problems
----------------------
-In matrix_{state, send, redact}() function txnId sets by 2 rand() output.
-To send messages correctly application needs srand(time(0)).
-Also, it may be can be not unique and events can be not delivered.
-
-2.2. matrix-bot.h
------------------
-matrix-bot.h is a high-level wrapper for ~segfaults~ matrix-client.h
-
-2.2.1. Usage
+1.2 Building
 ------------
-#include <string.h> /* strcmp() */
-#include <unistd.h> /* usleep() */
+$ make release
+Also, you can set TARGET, like that:
+$ make TARGET=RELEASE
+Default target is DEBUG
 
-#include "include/matrix-bot.h"
+TARGETs:
+ * RELEASE -- with optimizations
+ * DEBUG   -- with debug symbols and wo/ optimizations
+ * CLANG   -- like RELEASE, but build and link with clang
+See makefile to more information about creating own target
 
-/* 2.1.5: */
-#include <stdio.h>
-#include <time.h>
+1.3 Usage
+---------
+$ bin/onesunflowerbot [--homeserver|-h <homeserver>]
+                      [--token|-t <token>]
+                      [--tokenfile|-f <token file>]
+Without arguments bot will use token from .matrix_token
+and homeserver "matrix-client.matrix.org"
 
-void on_message(MatrixBotContext ctx, MatrixEventMessage *msg) {
-  if (!msg->body) return; /* some cool persons send m.room.message event wo/ body... */
-  if (!strcmp("!ping", msg->body)) {
-    /* for sending messages you can use
-     *  matrixbot_[q]send[f]() and matrixbot_reply[f]().
-     * prefix [q] free response
-     * [f] -- format like printf:
-     */
-    matrixbot_qreplyf(ctx, "Hello, %s!", ctx.event->sender);
-  }
-}
-main() {
-  MatrixBot bot;
-  /* see 2.1.5 */
-  srand(time(0));
-  /* init bot */
-  bot = matrixbot_new("my.homeserver.example.com", "super-secret-token");
-  /* add handler */
-  bot.handlers.message_new = on_message;
-  /* first sync, ignore first events... */
-  matrixbot_qsync(bot);
-  /* start bot */
-  while (1) {
-    matrixbot_loop(&bot); /* perform one sync */
-    usleep(100000); /* sleep for 100ms (or DoS you'r homeserver...) */
-  }
-}
+Token file is just file with bot token:
+$ echo "$SECRET_MATRIX_TOKEN" > .matrix_token
+
+2. Adding new commands
+======================
+Create new file in src/commands/...
+and put it:
+
+ #include "../include/matrix-autocmd.h"
+
+ void cmd_ping(MatrixBotContext ctx, MatrixEventMessage *msg) {
+   matrixbot_qreply(ctx, "Pong!");
+ }
+
+ mxmod {
+   mxautocmd_register("!ping", MXAUTOCMD_COMMAND, (void (*)(MatrixBotContext ctx, ...)cmd_ping));
+ }
+
+2.1 Sending events/messages
+---------------------------
+Low-level function:
+ #include "include/matrix-client.h"
+ 
+ matrix_request(client, method, path, query?, body?)
+   Send request to matrix homeserver
+ matrix_sync(client, query?)
+   Sync with matrix homeserver (and mutate client)
+ matrix_state(client, room_id, event_type, body?)
+   Sets state in room_id
+ matrix_send(client, room_id, event_type, body?)
+   Send event to room_id
+ matrix_redact(client, room_id, event_id, reason?)
+   Redacts event in room_id
+
+High-level functions:
+ #include "include/matrix-bot.h"
+
+ matrixbot_qsync(bot)
+   Quiet sync (free result)
+ matrixbot_send(ctx, message)
+   Send message
+ matrixbot_reply(ctx, message)
+   Reply to event
+ matrixbot_sendf(ctx, fmt, ...)
+   Send formatted message
+ matrixbot_replyf(ctx, fmt, ...)
+   Reply to event with formatted content
+
+ matrixbot_qsend(ctx, message)
+   Send message quietly
+ matrixbot_qreply(ctx, message)
+   Reply to event quietly
+ matrixbot_qsendf(ctx, fmt, ...)
+   Send formatted message quietly
+ matrixbot_qreplyf(ctx, fmt, ...)
+   Reply to event with formatted content quietly
+
+2.2 More
+--------
+For more docs see docs.txt
+
 
 3. To-Do
 ========
-- [x] Write matrix-client.h
- - [x] Impl matrix_{request,sync,state,send,redact}
-- [x] Write matrix-bot.h -- h-lvl wrapper for matrix-client
- - [x] struct MatrixBot that contains MatrixClient and unhandled events
- - [x] struct MatrixBotHandlers that contains handlers for events:
-       void (*handle_room_message)(...), etc...
- - [x] functions like matrix_reply, etc...
-...
-- [ ] Lua?..
+- [ ] Lua?
 - [ ] Rewrite this bot to rust (assigned to @nanoqsh)
       Call it like One Super-Secure-Without-Null-And-Other
         -UB-things--And-One-Thread-Super-Thread-Safe Bot ☕
 
-4. GitHub actions
-=================
-[nothing...]
+---
+Amchik <you-can-find-my-email-in-commits@example.com>
+Sat Jul  2 08:46:05 PM UTC 2022 [date --utc]
 
