@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <cjson/cJSON.h>
 
 #include "include/matrix-storage.h"
@@ -11,23 +12,24 @@ MatrixStorage matrixstorage_create(const char *filename) {
   char *jsonstr;
   size_t flen;
   cJSON *root, *obj;
+  FILE *fp;
 
   res.filename = filename;
-  res._fileptr = fopen(filename, "r");
-  if (!res._fileptr)
-    goto open_write;
+  fp = fopen(filename, "r");
+  if (!fp)
+    return(res);
 
-  fseek(res._fileptr, 0, SEEK_END);
-  flen = ftell(res._fileptr);
-  fseek(res._fileptr, 0, SEEK_SET);
+  fseek(fp, 0, SEEK_END);
+  flen = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
   if (flen == 0) {
-    fclose(res._fileptr);
-    goto open_write;
+    fclose(fp);
+    return(res);
   }
   jsonstr = malloc(flen + 1);
   jsonstr[flen] = 0;
-  fread(jsonstr, 1, flen, res._fileptr);
-  fclose(res._fileptr);
+  fread(jsonstr, 1, flen, fp);
+  fclose(fp);
   root = cJSON_Parse(jsonstr);
   free(jsonstr);
 
@@ -37,19 +39,19 @@ MatrixStorage matrixstorage_create(const char *filename) {
   }
   cJSON_Delete(root);
 
-open_write:
-  res._fileptr = fopen(filename, "w");
-  if (!res._fileptr) {
-    res.node = 0;
-  }
-
   return(res);
 }
-void matrixstorage_save(MatrixStorage self) {
+int matrixstorage_save(MatrixStorage self) {
   MatrixStorageNode *node;
   char *jsonstr;
   size_t len;
   cJSON *json;
+  FILE *fp;
+
+  fp = fopen(self.filename, "w");
+  if (!fp) {
+    return(errno);
+  }
 
   json = cJSON_CreateObject();
   for (node = self.node; node != 0; node = node->next) {
@@ -59,9 +61,12 @@ void matrixstorage_save(MatrixStorage self) {
   cJSON_Delete(json);
 
   len = strlen(jsonstr);
-  fseek(self._fileptr, 0, SEEK_SET);
-  fwrite(jsonstr, 1, len, self._fileptr);
+  fseek(fp, 0, SEEK_SET);
+  fwrite(jsonstr, 1, len, fp);
+  fclose(fp);
   free(jsonstr);
+
+  return(0);
 }
 void matrixstorage_close(MatrixStorage self) {
   MatrixStorageNode *node, *next;
@@ -70,7 +75,6 @@ void matrixstorage_close(MatrixStorage self) {
     next = node->next;
     free(node);
   }
-  fclose(self._fileptr);
 }
 
 __attribute__((nonnull(2, 3)))

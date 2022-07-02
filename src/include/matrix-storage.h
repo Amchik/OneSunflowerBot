@@ -38,12 +38,6 @@ typedef struct {
    * no nodes in storage.
    */
   MatrixStorageNode *node;
-
-  /**
-   * File stream. Open in 'w' mode, but sometimes
-   * can be NULL if failed to open it.
-   */
-  FILE *_fileptr;
 } MatrixStorage;
 
 /**
@@ -53,8 +47,9 @@ __attribute__((nonnull(1)))
 MatrixStorage matrixstorage_create(const char *filename);
 /**
  * Save data to filename.
+ * Returns zero on success. On failture return and set errno.
  */
-void matrixstorage_save(MatrixStorage self);
+int matrixstorage_save(MatrixStorage self);
 /**
  * Close MatrixStorage. It will deallocate nodes and
  * close file.
