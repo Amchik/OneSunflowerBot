@@ -11,15 +11,17 @@
 
 #include <stdio.h>
 
+#include "matrix-defines.h"
+
 typedef struct MatrixStorageNode {
   /**
    * Name of storage unit. Cannot be NULL.
    */
-  char name[128];
+  char name[MATRIXSTORAGE_NAMELEN];
   /**
    * Value of storage unit. Cannot be NULL.
    */
-  char value[256];
+  char value[MATRIXSTORAGE_VALUELEN];
 
   /**
    * Pointer to next node. Can be NULL if this is last node.
