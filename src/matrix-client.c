@@ -160,7 +160,7 @@ __attribute__((nonnull(1))) cJSON* matrix_sync(
     MatrixClient *client,
     const MatrixNode *query
     ) {
-  cJSON *json;
+  cJSON *json, *jnext_batch;
   const char *next_batch;
   const MatrixNode *fullquery;
 
@@ -171,9 +171,11 @@ __attribute__((nonnull(1))) cJSON* matrix_sync(
   }
 
   json = matrix_request(client, "GET", "/_matrix/client/v3/sync", fullquery, 0);
-  if (json == 0) return(json);
+  if (json == 0
+      || !(jnext_batch = cJSON_GetObjectItemCaseSensitive(json, "next_batch")))
+    return(json);
 
-  next_batch = (cJSON_GetObjectItemCaseSensitive(json, "next_batch"))->valuestring;
+  next_batch = jnext_batch->valuestring;
   if (!next_batch)
     return(json);
   strncpy(client->batch, next_batch, 64);

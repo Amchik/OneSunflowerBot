@@ -14,7 +14,7 @@
 #include "matrix-defines.h"
 
 typedef struct MatrixClient {
-  char batch[64];
+  char batch[MATRIX_NEXTBATCH_LEN];
   char homeserver[64]; /* yes, domains like ohmygodthisdomainistoolong.com not supported */
   char access_token[MATRIX_ACCESSTOKEN_LEN];
 } MatrixClient;
