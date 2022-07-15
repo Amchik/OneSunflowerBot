@@ -34,9 +34,13 @@ void cmd_score(MatrixBotContext ctx, MatrixEventMessage *msg) {
 
   matrixbot_qreplyf(ctx, "You score is %d! Type this command again to up it", score);
 }
+void cmd_batch(MatrixBotContext ctx, MatrixEventMessage *msg) {
+  matrixbot_qreplyf(ctx, "%s", ctx.client->client.batch);
+}
 
 mxmod {
   mxautocmd_register("!ping", MXAUTOCMD_COMMAND, (void (*)(MatrixBotContext ctx, ...))cmd_ping);
   mxautocmd_register("!score", MXAUTOCMD_COMMAND, (void (*)(MatrixBotContext ctx, ...))cmd_score);
+  mxautocmd_register("!batch", MXAUTOCMD_COMMAND, (void (*)(MatrixBotContext ctx, ...))cmd_batch);
 }
 

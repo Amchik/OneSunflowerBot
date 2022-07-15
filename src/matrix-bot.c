@@ -90,18 +90,19 @@ MatrixBotLoopResult matrixbot_loop(MatrixBot *bot) {
   result.errcode[0] = 0;
   result.error[0] = 0;
   root = matrix_sync(&bot->client, 0);
-  //rooms = JSON(root, "rooms", "join", 0);
-  //if (!rooms || !json_object_is_type(rooms, json_type_object)) {
-  if (!(rooms = cJSON_GetObjectItemCaseSensitive(root, "rooms")) 
+  if ((rooms = cJSON_GetObjectItemCaseSensitive(root, "errcode"))) {
+    /* rooms here is error or errcode */
+    strncpy(result.errcode, rooms->valuestring, sizeof(result.errcode));
+    if ((rooms = cJSON_GetObjectItemCaseSensitive(root, "error")))
+      strncpy(result.error, rooms->valuestring, sizeof(result.error));
+    cJSON_Delete(root);
+    return result;
+  } else if (!(rooms = cJSON_GetObjectItemCaseSensitive(root, "rooms")) 
       || !(rooms = cJSON_GetObjectItemCaseSensitive(rooms, "join")) 
       || !cJSON_IsObject(rooms)) {
-    strncpy(result.errcode, cJSON_GetObjectItemCaseSensitive(root, "errcode")->valuestring, sizeof(result.errcode));
-    strncpy(result.error, cJSON_GetObjectItemCaseSensitive(root, "error")->valuestring, sizeof(result.error));
-    cJSON_Delete(root);
     return result;
   }
 
-  /* not ansi c, but this bot uses c99... */
   for (events = rooms->child; events != 0; events = events->next) {
     room_id = events->string;
     if (!(timeline = cJSON_GetObjectItemCaseSensitive(events, "timeline"))
